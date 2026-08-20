@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 
 class Category extends Model
 {
@@ -23,6 +24,15 @@ class Category extends Model
         'sort_order' => 'integer'
     ]; 
 
+    protected static function booted(): void
+    {
+        // Clear the public categories cache whenever a category changes,
+        // regardless of whether the write came from the API or Filament.
+        static::saved(fn () => Cache::forget('categories.public'));
+        static::deleted(fn () => Cache::forget('categories.public'));
+    }
+
+    
     public function menuItems(): HasMany
     {
         return $this->hasMany(menu_item:: class);

@@ -8,13 +8,7 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Resources\Resource;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Filters\TernaryFilter;
-use Filament\Tables\Table;
+
 use Illuminate\Support\Str;
 class MenuItemForm
 {
@@ -75,7 +69,7 @@ class MenuItemForm
                 ->maxSize(5120) // 5MB, matches backend validation
                 ->columnSpanFull(),
  
-            TextInput::make('sort_order')
+            TextInput::make('sort')
                 ->numeric()
                 ->default(0),
  

@@ -41,7 +41,7 @@ class CategoryForm
                 ->default(0)
                 ->helperText('Lower numbers appear first in the category tabs'),
  
-            Toggle::make('is_active')
+            Toggle::make('isactive')
                 ->label('Visible on website')
                 ->default(true)
                 ->helperText('Turn off to hide this category without deleting it'),

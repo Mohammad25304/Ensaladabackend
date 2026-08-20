@@ -12,7 +12,7 @@ class Loginrequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return false;
+        return true;
     }
 
     /**

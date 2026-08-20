@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Support\Facades\Cache;
 
 class menu_item extends Model
 {
@@ -37,6 +38,12 @@ class menu_item extends Model
 
     public function tags(): BelongsToMany{
         return $this->belongsToMany(Tag::class,"menu_item_tag");
+    }
+
+    protected static function booted(): void
+    {
+        static::saved(fn () => Cache::forget('menu_items.public'));
+        static::deleted(fn () => Cache::forget('menu_items.public'));
     }
 
     public function scopeAvailable($query){

@@ -22,7 +22,7 @@ return new class extends Migration
             $table->string('image_public_id')->nullable();// needed to replace/delete on Cloudinary 
             $table->boolean('is_featured')->default('false');
             $table->boolean('is_available')->default('true');
-            $table->unsignedInteger('sort')->default(0);
+            $table->unsignedInteger('sort_order')->default(0);
 
 
             $table->timestamps();

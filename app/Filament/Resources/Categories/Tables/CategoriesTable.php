@@ -29,7 +29,7 @@ class CategoriesTable
                     ->counts('menuItems')
                     ->badge(),
  
-                IconColumn::make('is_active')
+                IconColumn::make('isactive')
                     ->label('Active')
                     ->boolean(),
  

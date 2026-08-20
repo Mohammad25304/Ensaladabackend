@@ -59,7 +59,7 @@ class MenuItemsTable
                 TernaryFilter::make('is_available')
                     ->label('Available'),
             ])
-            ->defaultSort('sort_order')
-            ->reorderable('sort_order');
+            ->defaultSort('sort')
+            ->reorderable('sort');
     }
 }

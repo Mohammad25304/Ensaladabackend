@@ -7,6 +7,7 @@ use App\Http\Requests\ReorderMenuItemsRequest;
 use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\menu_item;
+use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -73,6 +74,7 @@ class MenuItemController extends Controller
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
             $data['image'] = asset('storage/' . $path);
+
             $data['image_public_id'] = $path;
         }
 
@@ -105,8 +107,8 @@ class MenuItemController extends Controller
 
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/' . $path);
-            
+                        $data['image'] = asset('storage/' . $path);
+
             $data['image_public_id'] = $path;
         }
 
