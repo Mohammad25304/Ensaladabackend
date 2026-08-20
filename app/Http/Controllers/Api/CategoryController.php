@@ -48,7 +48,7 @@ class CategoryController extends Controller
     public function store(StoreCategoryRequest $request)
     {
         $data = $request->validated();
-        $data['slug'] = $this->uniqueSlug($data['name']);
+        $data['slug'] = $this->uniqueSlug($data['name']['en']);
 
         $category = Category::create($data);
 
@@ -64,8 +64,8 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
 
-        if (isset($data['name']) && $data['name'] !== $category->name) {
-            $data['slug'] = $this->uniqueSlug($data['name'], $category->id);
+        if (isset($data['name']['en']) && $data['name']['en'] !== ($category->name['en'] ?? null)) {
+            $data['slug'] = $this->uniqueSlug($data['name']['en'], $category->id);
         }
 
         $category->update($data);

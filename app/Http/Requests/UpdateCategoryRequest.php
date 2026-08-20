@@ -14,8 +14,12 @@ class UpdateCategoryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => ['sometimes', 'required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'name' => ['sometimes', 'required', 'array'],
+            'name.en' => ['required_with:name', 'string', 'max:255'],
+            'name.es' => ['required_with:name', 'string', 'max:255'],
+            'description' => ['nullable', 'array'],
+            'description.en' => ['nullable', 'string'],
+            'description.es' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
             'is_active' => ['nullable', 'boolean'],
         ];

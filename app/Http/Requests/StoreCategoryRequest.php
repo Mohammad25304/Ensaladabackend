@@ -2,31 +2,26 @@
 
 namespace App\Http\Requests;
 
-use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreCategoryRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     */
     public function authorize(): bool
     {
         return $this->user()?->isAdmin() ?? false;
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array<string, ValidationRule|array<mixed>|string>
-     */
     public function rules(): array
     {
         return [
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['nullable', 'string'],
+            'name' => ['required', 'array'],
+            'name.en' => ['required', 'string', 'max:255'],
+            'name.es' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'array'],
+            'description.en' => ['nullable', 'string'],
+            'description.es' => ['nullable', 'string'],
             'sort_order' => ['nullable', 'integer'],
-            'is_active' => ['nullable', 'boolean'],   
+            'is_active' => ['nullable', 'boolean'],
         ];
     }
 }

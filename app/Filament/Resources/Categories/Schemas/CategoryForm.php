@@ -12,39 +12,47 @@ class CategoryForm
 {
      public static function configure(Schema $schema): Schema
     {
-        return $schema->components([
-            TextInput::make('name')
+    return $schema->components([
+            TextInput::make('name.en')
+                ->label('Name (English)')
                 ->required()
                 ->maxLength(255)
                 ->live(onBlur: true)
                 ->afterStateUpdated(function (string $operation, $state, callable $set) {
-                    // Auto-fill the slug from the name, but only when creating
-                    // (so editing the name later doesn't silently break existing links)
                     if ($operation === 'create') {
                         $set('slug', Str::slug($state));
                     }
                 }),
  
+            TextInput::make('name.es')
+                ->label('Name (Spanish)')
+                ->required()
+                ->maxLength(255),
+ 
             TextInput::make('slug')
                 ->required()
                 ->maxLength(255)
                 ->unique(ignoreRecord: true)
-                ->helperText('Used in the menu page URL, e.g. /menu/signature-bowls'),
+                ->helperText('Used in the menu page URL, e.g. /menu/signature-bowls')
+                ->columnSpanFull(),
  
-            Textarea::make('description')
-                ->rows(3)
-                ->columnSpanFull()
-                ->helperText('Shown under the category name on the menu page'),
+            Textarea::make('description.en')
+                ->label('Description (English)')
+                ->rows(3),
+ 
+            Textarea::make('description.es')
+                ->label('Description (Spanish)')
+                ->rows(3),
  
             TextInput::make('sort_order')
                 ->numeric()
                 ->default(0)
                 ->helperText('Lower numbers appear first in the category tabs'),
  
-            Toggle::make('isactive')
+            Toggle::make('is_active')
                 ->label('Visible on website')
                 ->default(true)
                 ->helperText('Turn off to hide this category without deleting it'),
-        ]);
+        ])->columns(2);
     }
 }

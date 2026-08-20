@@ -3,9 +3,11 @@
 namespace Tests\Feature;
 
 use App\Models\Category;
-use App\Models\menu_item;
+use App\Models\MenuItem;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -15,8 +17,8 @@ class MenuItemApiTest extends TestCase
 
     public function test_public_only_sees_available_items(): void
     {
-        menu_item::factory()->create(['is_available' => true]);
-        menu_item::factory()->create(['is_available' => false]);
+        MenuItem::factory()->create(['is_available' => true]);
+        MenuItem::factory()->create(['is_available' => false]);
 
         $response = $this->getJson('/api/menu-items');
 
@@ -28,8 +30,8 @@ class MenuItemApiTest extends TestCase
         $bowls = Category::factory()->create(['slug' => 'bowls']);
         $drinks = Category::factory()->create(['slug' => 'drinks']);
 
-        menu_item::factory()->create(['category_id' => $bowls->id]);
-        menu_item::factory()->create(['category_id' => $drinks->id]);
+        MenuItem::factory()->create(['category_id' => $bowls->id]);
+        MenuItem::factory()->create(['category_id' => $drinks->id]);
 
         $response = $this->getJson('/api/menu-items?category=bowls');
 
@@ -38,8 +40,8 @@ class MenuItemApiTest extends TestCase
 
     public function test_public_can_filter_featured_items(): void
     {
-        menu_item::factory()->create(['is_featured' => true]);
-        menu_item::factory()->create(['is_featured' => false]);
+        MenuItem::factory()->create(['is_featured' => true]);
+        MenuItem::factory()->create(['is_featured' => false]);
 
         $response = $this->getJson('/api/menu-items?featured=1');
 
@@ -52,8 +54,8 @@ class MenuItemApiTest extends TestCase
 
         $response = $this->postJson('/api/admin/menu-items', [
             'category_id' => $category->id,
-            'name' => 'Test Item',
-            'description' => 'A test item',
+            'name' => ['en' => 'Test Item', 'es' => 'Artículo de Prueba'],
+            'description' => ['en' => 'A test item', 'es' => 'Un artículo de prueba'],
             'price' => 9.99,
         ]);
 
@@ -62,18 +64,24 @@ class MenuItemApiTest extends TestCase
 
     public function test_admin_can_create_menu_item(): void
     {
+        Storage::fake('public');
+
         $admin = User::factory()->create(['role' => 'admin']);
         $category = Category::factory()->create();
         Sanctum::actingAs($admin);
 
-        $response = $this->postJson('/api/admin/menu-items', [
+        $response = $this->post('/api/admin/menu-items', [
             'category_id' => $category->id,
-            'name' => 'Caesar Salad',
-            'description' => 'Romaine, parmesan, croutons, house dressing',
+            'name' => ['en' => 'Caesar Salad', 'es' => 'Ensalada César'],
+            'description' => [
+                'en' => 'Romaine, parmesan, croutons, house dressing',
+                'es' => 'Romana, parmesano, crutones, aderezo de la casa',
+            ],
             'price' => 12.50,
-        ]);
+            'image' => UploadedFile::fake()->create('caesar.jpg', 100, 'image/jpeg'),
+        ], ['Accept' => 'application/json']);
 
-        $response->assertCreated()->assertJsonFragment(['name' => 'Caesar Salad']);
+        $response->assertCreated()->assertJsonPath('name.en', 'Caesar Salad');
         $this->assertDatabaseHas('menu_items', ['slug' => 'caesar-salad']);
     }
 
@@ -83,9 +91,9 @@ class MenuItemApiTest extends TestCase
         Sanctum::actingAs($admin);
 
         $response = $this->postJson('/api/admin/menu-items', [
-            'category_id' => 999, // doesn't exist
-            'name' => 'Test Item',
-            'description' => 'Test',
+            'category_id' => 999,
+            'name' => ['en' => 'Test Item', 'es' => 'Artículo de Prueba'],
+            'description' => ['en' => 'Test', 'es' => 'Prueba'],
             'price' => 9.99,
         ]);
 
@@ -95,7 +103,7 @@ class MenuItemApiTest extends TestCase
     public function test_admin_can_delete_menu_item(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
-        $item = menu_item::factory()->create();
+        $item = MenuItem::factory()->create();
         Sanctum::actingAs($admin);
 
         $this->deleteJson("/api/admin/menu-items/{$item->id}")->assertOk();

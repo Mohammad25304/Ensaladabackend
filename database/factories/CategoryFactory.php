@@ -12,9 +12,15 @@ class CategoryFactory extends Factory
         $name = fake()->unique()->words(2, true);
 
         return [
-            'name' => ucwords($name),
+            'name' => [
+                'en' => ucwords($name),
+                'es' => ucwords($name), // placeholder — real Spanish content added via admin
+            ],
             'slug' => Str::slug($name),
-            'description' => fake()->sentence(),
+            'description' => [
+                'en' => fake()->sentence(),
+                'es' => fake()->sentence(),
+            ],
             'sort_order' => fake()->numberBetween(0, 10),
             'is_active' => true,
         ];

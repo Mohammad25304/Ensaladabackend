@@ -6,7 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\ReorderMenuItemsRequest;
 use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
-use App\Models\menu_item;
+use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
@@ -29,7 +29,7 @@ class MenuItemController extends Controller
     public function index(Request $request)
     {
         $items = Cache::remember(self::CACHE_KEY, now()->addHours(6), function () {
-            return menu_item::query()
+            return MenuItem::query()
                 ->with(['category', 'tags'])
                 ->available()
                 ->ordered()
@@ -56,7 +56,7 @@ class MenuItemController extends Controller
     /**
      * GET /api/menu-items/{menuItem}
      */
-    public function show(menu_item $menuItem)
+    public function show(MenuItem $menuItem)
     {
         return response()->json($menuItem->load(['category', 'tags']));
     }
@@ -73,14 +73,15 @@ class MenuItemController extends Controller
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
             $data['image'] = asset('storage/' . $path);
+
             $data['image_public_id'] = $path;
         }
 
-        $data['slug'] = $this->uniqueSlug($data['name']);
+        $data['slug'] = $this->uniqueSlug($data['name']['en']);
         $tags = $data['tags'] ?? null;
         unset($data['tags']);
 
-        $menuItem = menu_item::create($data);
+        $menuItem = MenuItem::create($data);
 
         if ($tags !== null) {
             $menuItem->tags()->sync($tags);
@@ -94,7 +95,7 @@ class MenuItemController extends Controller
     /**
      * PUT /api/admin/menu-items/{menuItem}
      */
-    public function update(UpdateMenuItemRequest $request, menu_item $menuItem)
+    public function update(UpdateMenuItemRequest $request, MenuItem $menuItem)
     {
         $data = $request->validated();
 
@@ -106,12 +107,12 @@ class MenuItemController extends Controller
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
             $data['image'] = asset('storage/' . $path);
-            
+
             $data['image_public_id'] = $path;
         }
 
-        if (isset($data['name']) && $data['name'] !== $menuItem->name) {
-            $data['slug'] = $this->uniqueSlug($data['name'], $menuItem->id);
+        if (isset($data['name']['en']) && $data['name']['en'] !== ($menuItem->name['en'] ?? null)) {
+            $data['slug'] = $this->uniqueSlug($data['name']['en'], $menuItem->id);
         }
 
         $tags = $data['tags'] ?? null;
@@ -131,7 +132,7 @@ class MenuItemController extends Controller
     /**
      * DELETE /api/admin/menu-items/{menuItem}
      */
-    public function destroy(menu_item $menuItem)
+    public function destroy(MenuItem $menuItem)
     {
         if ($menuItem->image_public_id) {
             Storage::disk('public')->delete($menuItem->image_public_id);
@@ -151,7 +152,7 @@ class MenuItemController extends Controller
     public function reorder(ReorderMenuItemsRequest $request)
     {
         foreach ($request->validated('order') as $item) {
-            menu_item::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
+            MenuItem::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
         }
 
         $this->clearCache();
@@ -174,7 +175,7 @@ class MenuItemController extends Controller
         $i = 1;
 
         while (
-            menu_item::where('slug', $slug)
+            MenuItem::where('slug', $slug)
                 ->when($ignoreId, fn ($q) => $q->where('id', '!=', $ignoreId))
                 ->exists()
         ) {

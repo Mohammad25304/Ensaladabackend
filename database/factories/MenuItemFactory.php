@@ -6,7 +6,7 @@ use App\Models\Category;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
-class menu_itemFactory extends Factory
+class MenuItemFactory extends Factory
 {
     public function definition(): array
     {
@@ -14,9 +14,15 @@ class menu_itemFactory extends Factory
 
         return [
             'category_id' => Category::factory(),
-            'name' => ucwords($name),
+            'name' => [
+                'en' => ucwords($name),
+                'es' => ucwords($name),
+            ],
             'slug' => Str::slug($name),
-            'description' => fake()->sentence(12),
+            'description' => [
+                'en' => fake()->sentence(12),
+                'es' => fake()->sentence(12),
+            ],
             'price' => fake()->randomFloat(2, 5, 25),
             'image' => 'https://placehold.co/400x300',
             'image_public_id' => null,

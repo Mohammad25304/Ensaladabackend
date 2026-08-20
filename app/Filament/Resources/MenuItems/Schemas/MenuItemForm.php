@@ -14,8 +14,9 @@ class MenuItemForm
 {
     public static function configure(Schema $schema): Schema
     {
-    return $schema->components([
-            TextInput::make('name')
+        return $schema->components([
+            TextInput::make('name.en')
+                ->label('Name (English)')
                 ->required()
                 ->maxLength(255)
                 ->live(onBlur: true)
@@ -23,16 +24,22 @@ class MenuItemForm
                     if ($operation === 'create') {
                         $set('slug', Str::slug($state));
                     }
-                })
-                ->columnSpan(2),
+                }),
+ 
+            TextInput::make('name.es')
+                ->label('Name (Spanish)')
+                ->required()
+                ->maxLength(255),
  
             TextInput::make('slug')
                 ->required()
                 ->maxLength(255)
-                ->unique(ignoreRecord: true),
+                ->unique(ignoreRecord: true)
+                ->columnSpanFull(),
  
             Select::make('category_id')
                 ->relationship('category', 'name')
+                ->getOptionLabelFromRecordUsing(fn ($record) => $record->name['en'] ?? '(untitled)')
                 ->required()
                 ->searchable()
                 ->preload(),
@@ -53,11 +60,15 @@ class MenuItemForm
                 ])
                 ->helperText('e.g. Vegan, Gluten-Free, High-Protein'),
  
-            Textarea::make('description')
+            Textarea::make('description.en')
+                ->label('Description / Ingredients (English)')
                 ->required()
-                ->rows(4)
-                ->columnSpanFull()
-                ->helperText('This also serves as the ingredients list shown to customers'),
+                ->rows(4),
+ 
+            Textarea::make('description.es')
+                ->label('Description / Ingredients (Spanish)')
+                ->required()
+                ->rows(4),
  
             FileUpload::make('image')
                 ->image()
@@ -66,10 +77,10 @@ class MenuItemForm
                 ->directory('menu-items')
                 ->imageEditor()
                 ->imagePreviewHeight('200')
-                ->maxSize(5120) // 5MB, matches backend validation
+                ->maxSize(5120)
                 ->columnSpanFull(),
  
-            TextInput::make('sort')
+            TextInput::make('sort_order')
                 ->numeric()
                 ->default(0),
  

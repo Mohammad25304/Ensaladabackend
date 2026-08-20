@@ -14,18 +14,19 @@ use Filament\Tables\Filters\TernaryFilter;
 class MenuItemsTable
 {
     public static function configure(Table $table): Table
-    {
-          return $table
+       {
+        return $table
             ->columns([
                 ImageColumn::make('image')
                     ->disk('public')
                     ->square(),
  
-                TextColumn::make('name')
+                TextColumn::make('name.en')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
  
-                TextColumn::make('category.name')
+                TextColumn::make('category.name.en')
                     ->label('Category')
                     ->badge()
                     ->sortable(),
@@ -59,7 +60,7 @@ class MenuItemsTable
                 TernaryFilter::make('is_available')
                     ->label('Available'),
             ])
-            ->defaultSort('sort')
-            ->reorderable('sort');
+            ->defaultSort('sort_order')
+            ->reorderable('sort_order');
     }
 }

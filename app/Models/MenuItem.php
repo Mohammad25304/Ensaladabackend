@@ -8,9 +8,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
 
-class menu_item extends Model
+class MenuItem extends Model
 {
-        use HasFactory;
+    use HasFactory;
 
     protected $fillable = [
         'category_id',
@@ -22,23 +22,17 @@ class menu_item extends Model
         'image_public_id',
         'is_featured',
         'is_available',
-        'sort_order'
+        'sort_order',
     ];
 
     protected $casts = [
+        'name' => 'array',
+        'description' => 'array',
         'price' => 'decimal:2',
         'is_featured' => 'boolean',
         'is_available' => 'boolean',
         'sort_order' => 'integer',
     ];
-
-    public function category(): BelongsTo{
-        return $this->belongsTo(Category::class );
-    }
-
-    public function tags(): BelongsToMany{
-        return $this->belongsToMany(Tag::class,"menu_item_tag");
-    }
 
     protected static function booted(): void
     {
@@ -46,16 +40,28 @@ class menu_item extends Model
         static::deleted(fn () => Cache::forget('menu_items.public'));
     }
 
-    public function scopeAvailable($query){
-        return $query->where('is_available', true);
-    }   
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
 
-    public function scopeFeatured($query){
+    public function tags(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'menu_item_tag');
+    }
+
+    public function scopeAvailable($query)
+    {
+        return $query->where('is_available', true);
+    }
+
+    public function scopeFeatured($query)
+    {
         return $query->where('is_featured', true);
     }
 
-    public function scopeOrdered($query){
-        return $query->orderby('sort_order');
+    public function scopeOrdered($query)
+    {
+        return $query->orderBy('sort_order');
     }
-
 }

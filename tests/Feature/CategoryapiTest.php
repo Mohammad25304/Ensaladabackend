@@ -25,7 +25,7 @@ class CategoryApiTest extends TestCase
     public function test_guest_cannot_create_category(): void
     {
         $response = $this->postJson('/api/admin/categories', [
-            'name' => 'Test Category',
+            'name' => ['en' => 'Test Category', 'es' => 'Categoría de Prueba'],
         ]);
 
         $response->assertUnauthorized();
@@ -37,24 +37,29 @@ class CategoryApiTest extends TestCase
         Sanctum::actingAs($admin);
 
         $response = $this->postJson('/api/admin/categories', [
-            'name' => 'Signature Bowls',
-            'description' => 'Our house specials',
+            'name' => ['en' => 'Signature Bowls', 'es' => 'Bowls de Autor'],
+            'description' => ['en' => 'Our house specials', 'es' => 'Nuestras especialidades'],
         ]);
 
         $response->assertCreated()
-            ->assertJsonFragment(['name' => 'Signature Bowls', 'slug' => 'signature-bowls']);
+            ->assertJsonFragment(['slug' => 'signature-bowls'])
+            ->assertJsonPath('name.en', 'Signature Bowls')
+            ->assertJsonPath('name.es', 'Bowls de Autor');
 
         $this->assertDatabaseHas('categories', ['slug' => 'signature-bowls']);
     }
 
-    public function test_category_creation_requires_a_name(): void
+    public function test_category_creation_requires_bilingual_name(): void
     {
         $admin = User::factory()->create(['role' => 'admin']);
         Sanctum::actingAs($admin);
 
-        $response = $this->postJson('/api/admin/categories', []);
+        // Missing the Spanish name entirely
+        $response = $this->postJson('/api/admin/categories', [
+            'name' => ['en' => 'Signature Bowls'],
+        ]);
 
-        $response->assertUnprocessable()->assertJsonValidationErrors('name');
+        $response->assertUnprocessable()->assertJsonValidationErrors('name.es');
     }
 
     public function test_admin_can_reorder_categories(): void

@@ -20,7 +20,8 @@ class CategoriesTable
                     ->sortable()
                     ->width('50px'),
  
-                TextColumn::make('name')
+                TextColumn::make('name.en')
+                    ->label('Name')
                     ->searchable()
                     ->sortable(),
  
@@ -29,7 +30,7 @@ class CategoriesTable
                     ->counts('menuItems')
                     ->badge(),
  
-                IconColumn::make('isactive')
+                IconColumn::make('is_active')
                     ->label('Active')
                     ->boolean(),
  

@@ -15,10 +15,14 @@ class StoreMenuItemRequest extends FormRequest
     {
         return [
             'category_id' => ['required', 'exists:categories,id'],
-            'name' => ['required', 'string', 'max:255'],
-            'description' => ['required', 'string'], // doubles as ingredients text
+            'name' => ['required', 'array'],
+            'name.en' => ['required', 'string', 'max:255'],
+            'name.es' => ['required', 'string', 'max:255'],
+            'description' => ['required', 'array'], // doubles as ingredients text
+            'description.en' => ['required', 'string'],
+            'description.es' => ['required', 'string'],
             'price' => ['required', 'numeric', 'min:0'],
-            'image' => ['nullable', 'image', 'mimes:jpeg,png,webp', 'max:5120'],
+            'image' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:5120'],
             'is_featured' => ['nullable', 'boolean'],
             'is_available' => ['nullable', 'boolean'],
             'sort_order' => ['nullable', 'integer'],
