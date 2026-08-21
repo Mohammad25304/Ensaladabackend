@@ -27,9 +27,15 @@ class CategoryController extends Controller
             return response()->json(Category::orderBy('sort_order')->get());
         }
 
-        $categories = Cache::remember(self::CACHE_KEY, now()->addHours(6), function () {
-            return Category::active()->get();
-        });
+        $categories = Cache::remember(
+            self::CACHE_KEY,
+            now()->addHours(6),
+            function () {
+                return Category::active()
+                    ->get()
+                    ->toArray();
+            }
+        );
 
         return response()->json($categories);
     }

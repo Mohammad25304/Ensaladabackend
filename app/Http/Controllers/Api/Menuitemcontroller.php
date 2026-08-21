@@ -33,16 +33,23 @@ class MenuItemController extends Controller
                 ->with(['category', 'tags'])
                 ->available()
                 ->ordered()
-                ->get();
+                ->get()
+                ->toArray();
+
         });
 
+        $items = collect($items);
+
         if ($request->filled('category')) {
-            $items = $items->where('category.slug', $request->category);
+            $items = $items->filter(
+                fn ($item) => ($item['category']['slug'] ?? null) === $request->category
+            );
         }
 
         if ($request->filled('tag')) {
             $items = $items->filter(
-                fn ($item) => $item->tags->contains('name', $request->tag)
+                fn ($item) => collect($item['tags'] ?? [])
+                    ->contains('name', $request->tag)
             );
         }
 
@@ -72,7 +79,7 @@ class MenuItemController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = asset('storage/'.$path);
 
             $data['image_public_id'] = $path;
         }
@@ -106,7 +113,7 @@ class MenuItemController extends Controller
 
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = asset('storage/'.$path);
 
             $data['image_public_id'] = $path;
         }

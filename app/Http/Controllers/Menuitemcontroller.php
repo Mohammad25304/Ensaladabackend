@@ -7,7 +7,6 @@ use App\Http\Requests\ReorderMenuItemsRequest;
 use App\Http\Requests\StoreMenuItemRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
 use App\Models\MenuItem;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
@@ -26,31 +25,11 @@ class MenuItemController extends Controller
      * combination (category x tag x featured) which would be hard to
      * invalidate cleanly without Redis cache tags.
      */
-    public function index(Request $request)
+    public function index()
     {
-        $items = Cache::remember(self::CACHE_KEY, now()->addHours(6), function () {
-            return MenuItem::query()
-                ->with(['category', 'tags'])
-                ->available()
-                ->ordered()
-                ->get();
-        });
-
-        if ($request->filled('category')) {
-            $items = $items->where('category.slug', $request->category);
-        }
-
-        if ($request->filled('tag')) {
-            $items = $items->filter(
-                fn ($item) => $item->tags->contains('name', $request->tag)
-            );
-        }
-
-        if ($request->boolean('featured')) {
-            $items = $items->where('is_featured', true);
-        }
-
-        return response()->json($items->values());
+        return response()->json([
+            'message' => 'index works',
+        ]);
     }
 
     /**
@@ -72,7 +51,7 @@ class MenuItemController extends Controller
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = asset('storage/'.$path);
 
             $data['image_public_id'] = $path;
         }
@@ -106,7 +85,7 @@ class MenuItemController extends Controller
 
             $path = $request->file('image')->store('menu-items', 'public');
             // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/' . $path);
+            $data['image'] = asset('storage/'.$path);
 
             $data['image_public_id'] = $path;
         }

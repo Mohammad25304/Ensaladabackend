@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('menu_items', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('categor_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('category_id')->constrained('categories')->onDelete('cascade');
             $table->json('name'); // {"en": "Ensalada Bowl", "es": "Bowl Ensalada"}
             $table->string('slug')->unique(); // always derived from name.en
             $table->json('description'); // doubles as the ingredients list, bilingual
