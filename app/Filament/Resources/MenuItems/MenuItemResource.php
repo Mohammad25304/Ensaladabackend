@@ -9,7 +9,7 @@ use App\Filament\Resources\MenuItems\Pages\ViewMenuItem;
 use App\Filament\Resources\MenuItems\Schemas\MenuItemForm;
 use App\Filament\Resources\MenuItems\Schemas\MenuItemInfolist;
 use App\Filament\Resources\MenuItems\Tables\MenuItemsTable;
-use App\Models\menu_item;
+use App\Models\MenuItem;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
@@ -18,7 +18,7 @@ use Filament\Tables\Table;
 
 class MenuItemResource extends Resource
 {
-    protected static ?string $model = menu_item::class;
+    protected static ?string $model = MenuItem::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 

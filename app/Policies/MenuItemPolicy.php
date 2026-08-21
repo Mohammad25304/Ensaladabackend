@@ -2,7 +2,7 @@
 
 namespace App\Policies;
 
-use App\Models\menu_item;
+use App\Models\MenuItem;
 use App\Models\User;
 
 class MenuItemPolicy
@@ -12,7 +12,7 @@ class MenuItemPolicy
         return $user->isAdmin();
     }
 
-    public function view(User $user, menu_item $menuItem): bool
+    public function view(User $user, MenuItem $menuItem): bool
     {
         return $user->isAdmin();
     }
@@ -22,12 +22,12 @@ class MenuItemPolicy
         return $user->isAdmin();
     }
 
-    public function update(User $user, menu_item $menuItem): bool
+    public function update(User $user, MenuItem $menuItem): bool
     {
         return $user->isAdmin();
     }
 
-    public function delete(User $user, menu_item $menuItem): bool
+    public function delete(User $user, MenuItem $menuItem): bool
     {
         return $user->isAdmin();
     }

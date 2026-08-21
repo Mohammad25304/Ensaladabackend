@@ -36,8 +36,8 @@ class MenuItem extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('menu_items.public'));
-        static::deleted(fn () => Cache::forget('menu_items.public'));
+        static::saved(fn () => Cache::forget('MenuItem.public'));
+        static::deleted(fn () => Cache::forget('MenuItem.public'));
     }
 
     public function category(): BelongsTo

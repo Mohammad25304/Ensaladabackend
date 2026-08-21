@@ -34,7 +34,7 @@ class Category extends Model
 
     public function menuItems(): HasMany
     {
-        return $this->hasMany(menu_item::class);
+        return $this->hasMany(MenuItem::class);
     }
 
     public function scopeActive($query)
