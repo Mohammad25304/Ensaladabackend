@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Storage;
 
 class MenuItem extends Model
 {
@@ -36,8 +38,8 @@ class MenuItem extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('MenuItem.public'));
-        static::deleted(fn () => Cache::forget('MenuItem.public'));
+        static::saved(fn () => Cache::forget('menu_items.public'));
+        static::deleted(fn () => Cache::forget('menu_items.public'));
     }
 
     public function category(): BelongsTo
@@ -63,5 +65,21 @@ class MenuItem extends Model
     public function scopeOrdered($query)
     {
         return $query->orderBy('sort_order');
+    }
+
+    /**
+     * Always return a full, absolute URL for the image — whether it was
+     * uploaded via Filament (which stores a relative path like
+     * "menu-items/abc.jpg") or via the API (which already stores a full
+     * URL). This keeps the frontend simple: it can always trust `image`
+     * to be a directly-usable <img src> value.
+     */
+    protected function image(): Attribute
+    {
+        return Attribute::make(
+            get: fn (?string $value) => $value && ! str_starts_with($value, 'http')
+                ? Storage::disk('public')->url($value)
+                : $value,
+        );
     }
 }

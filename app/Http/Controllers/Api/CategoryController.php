@@ -55,6 +55,8 @@ class CategoryController extends Controller
     {
         $data = $request->validated();
         $data['slug'] = $this->uniqueSlug($data['name']['en']);
+        // Automatically assign the next sort order
+        $data['sort_order'] = (Category::max('sort_order') ?? 0) + 1;
 
         $category = Category::create($data);
 
