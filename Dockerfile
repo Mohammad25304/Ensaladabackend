@@ -30,9 +30,19 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite (needed for Laravel's pretty URLs)
 RUN a2enmod rewrite
 
-# Fix "More than one MPM loaded" - mod_php requires the prefork MPM,
-# but recent php:apache base images sometimes ship with event/worker also enabled
-RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork
+# Fix "More than one MPM loaded" - mod_php requires the prefork MPM
+# specifically (it isn't thread-safe), so we forcibly remove all other MPM
+# module symlinks/configs and enable only prefork. Done directly rather
+# than via a2dismod/a2enmod since those were not reliably taking effect.
+RUN rm -f /etc/apache2/mods-enabled/mpm_event.load \
+    /etc/apache2/mods-enabled/mpm_event.conf \
+    /etc/apache2/mods-enabled/mpm_worker.load \
+    /etc/apache2/mods-enabled/mpm_worker.conf \
+    /etc/apache2/mods-enabled/mpm_prefork.load \
+    /etc/apache2/mods-enabled/mpm_prefork.conf \
+    && ln -s /etc/apache2/mods-available/mpm_prefork.load /etc/apache2/mods-enabled/mpm_prefork.load \
+    && ln -s /etc/apache2/mods-available/mpm_prefork.conf /etc/apache2/mods-enabled/mpm_prefork.conf \
+    && apache2ctl -M 2>&1 | grep mpm || true
 
 # Point Apache's docroot at Laravel's /public folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
@@ -58,6 +68,12 @@ RUN composer run-script post-autoload-dump --no-interaction || true
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache \
     && chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Runtime entrypoint: fixes Apache's port binding for Railway's dynamic
+# $PORT, caches config with real runtime env vars, links storage, and
+# runs migrations — all *after* the container starts, not during build.
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
+
 EXPOSE 80
 
-CMD ["apache2-foreground"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
