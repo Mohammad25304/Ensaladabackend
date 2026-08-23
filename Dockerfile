@@ -13,11 +13,13 @@ RUN apt-get update && apt-get install -y \
     libxml2-dev \
     libjpeg-dev \
     libfreetype6-dev \
+    libpq-dev \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install -j$(nproc) \
     intl \
     zip \
-    pdo_mysql \
+    pdo_pgsql \
+    pgsql \
     mbstring \
     exif \
     pcntl \
