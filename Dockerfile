@@ -30,6 +30,10 @@ RUN apt-get update && apt-get install -y \
 # Enable Apache mod_rewrite (needed for Laravel's pretty URLs)
 RUN a2enmod rewrite
 
+# Fix "More than one MPM loaded" - mod_php requires the prefork MPM,
+# but recent php:apache base images sometimes ship with event/worker also enabled
+RUN a2dismod mpm_event mpm_worker 2>/dev/null; a2enmod mpm_prefork
+
 # Point Apache's docroot at Laravel's /public folder
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/public
 RUN sed -ri -e "s!/var/www/html!${APACHE_DOCUMENT_ROOT}!g" /etc/apache2/sites-available/*.conf \
