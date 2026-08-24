@@ -19,7 +19,7 @@ return [
 
     'allowed_methods' => ['*'],
 
-    'allowed_origins' => ['https://ensalad-frontend.vercel.app/'], // your Vite dev server's actual port
+    'allowed_origins' => ['https://ensalad-frontend-cfylnxe8d-mohammad-sabbahs-projects.vercel.app'], // your Vite dev server's actual port
 
     'allowed_origins_patterns' => [],
 
