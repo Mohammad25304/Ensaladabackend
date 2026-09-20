@@ -15,7 +15,13 @@ return new class extends Migration
     {
         Schema::table('site_settings', function (Blueprint $table) {
             $table->dropUnique(['key']);
-            $table->foreignId('branch_id')->after('id')->constrained()->cascadeOnDelete();
+
+            $table->foreignId('branch_id')
+                ->nullable()
+                ->after('id')
+                ->constrained()
+                ->cascadeOnDelete();
+
             $table->unique(['branch_id', 'key']);
         });
     }
