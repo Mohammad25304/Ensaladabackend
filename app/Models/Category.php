@@ -28,8 +28,14 @@ class Category extends Model
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('categories.public'));
-        static::deleted(fn () => Cache::forget('categories.public'));
+        static::saved(function () {
+            Cache::forget('categories.public');
+            Branch::clearCaches();
+        });
+        static::deleted(function () {
+            Cache::forget('categories.public');
+            Branch::clearCaches();
+        });
     }
 
     public function menuItems(): HasMany

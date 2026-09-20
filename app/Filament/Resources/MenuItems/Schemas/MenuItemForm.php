@@ -2,8 +2,10 @@
 
 namespace App\Filament\Resources\MenuItems\Schemas;
 
+use App\Models\Branch;
 use App\Models\Category;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
@@ -60,12 +62,6 @@ class MenuItemForm
                 ->searchable()
                 ->preload(),
 
-            TextInput::make('price')
-                ->required()
-                ->numeric()
-                ->prefix('$')
-                ->step(0.01),
-
             Select::make('tags')
                 ->relationship('tags', 'name')
                 ->multiple()
@@ -100,14 +96,56 @@ class MenuItemForm
                 ->numeric()
                 ->default(0),
 
+            TextInput::make('calories')
+                ->label('Calories')
+                ->numeric()
+                ->minValue(0)
+                ->suffix('kcal'),
+
+            TextInput::make('protein_grams')
+                ->label('Protein')
+                ->numeric()
+                ->minValue(0)
+                ->suffix('g'),
+
             Toggle::make('is_featured')
                 ->label('Show on homepage')
                 ->default(false),
 
-            Toggle::make('is_available')
-                ->label('Available')
-                ->default(true)
-                ->helperText('Turn off to hide temporarily without deleting'),
+            Repeater::make('branchMenuItems')
+                ->relationship()
+                ->label('Available at branches')
+                ->schema([
+                    Select::make('branch_id')
+                        ->label('Branch')
+                        ->options(fn () => Branch::query()
+                            ->orderBy('sort_order')
+                            ->get()
+                            ->mapWithKeys(fn ($branch) => [
+                                $branch->id => $branch->name['en'] ?? '(untitled)',
+                            ])
+                            ->toArray())
+                        ->required()
+                        ->searchable()
+                        ->distinct()
+                        ->disableOptionsWhenSelectedInSiblingRepeaterItems(),
+
+                    TextInput::make('price')
+                        ->required()
+                        ->numeric()
+                        ->minValue(0)
+                        ->prefix('$')
+                        ->step(0.01),
+
+                    Toggle::make('is_available')
+                        ->label('Available')
+                        ->default(true),
+                ])
+                ->columns(3)
+                ->addActionLabel('Add a branch')
+                ->defaultItems(0)
+                ->helperText('Add one row per branch this item is offered at, with that branch\'s price. Leave a branch out entirely if it\'s not offered there.')
+                ->columnSpanFull(),
         ])->columns(2);
     }
 }

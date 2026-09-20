@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ReorderMenuItemsRequest;
 use App\Http\Requests\StoreMenuItemRequest;
+use App\Http\Requests\SyncMenuItemBranchesRequest;
 use App\Http\Requests\UpdateMenuItemRequest;
+use App\Models\Branch;
 use App\Models\MenuItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -14,29 +16,55 @@ use Illuminate\Support\Str;
 
 class MenuItemController extends Controller
 {
-    private const CACHE_KEY = 'menu_items.public';
-
     /**
-     * GET /api/menu-items
-     * Public: available items, optionally filtered by category slug or tag.
-     * ?category=signature-bowls&tag=vegan&featured=1
+     * GET /api/menu-items?branch=beirut
+     * Public: items available at the given branch, with that branch's
+     * price attached, optionally filtered by category slug, tag, or
+     * featured flag. A branch is required — pricing and availability
+     * only make sense in the context of one.
      *
-     * The full available+ordered list is cached as one block, then filtered
-     * in memory — this avoids needing a separate cache key per filter
-     * combination (category x tag x featured) which would be hard to
-     * invalidate cleanly without Redis cache tags.
+     * The available+ordered list for a branch is cached as one block,
+     * then filtered in memory — this avoids needing a separate cache
+     * key per filter combination (category x tag x featured), which
+     * would be hard to invalidate cleanly without Redis cache tags.
      */
     public function index(Request $request)
     {
-        $items = Cache::remember(self::CACHE_KEY, now()->addHours(6), function () {
-            return MenuItem::query()
-                ->with(['category', 'tags'])
-                ->available()
-                ->ordered()
-                ->get()
-                ->toArray();
+        $request->validate(['branch' => ['required', 'string']]);
 
-        });
+        $branch = Branch::where('slug', $request->branch)->first();
+
+        if (! $branch) {
+            return response()->json(['message' => 'Branch not found'], 404);
+        }
+
+        $items = Cache::remember(
+            "menu_items.public.{$branch->slug}",
+            now()->addHours(6),
+            function () use ($branch) {
+                return MenuItem::query()
+                    ->with(['category', 'tags'])
+                    ->whereHas('branches', function ($q) use ($branch) {
+                        $q->where('branches.id', $branch->id)
+                            ->where('branch_menu_item.is_available', true);
+                    })
+                    ->with(['branches' => function ($q) use ($branch) {
+                        $q->where('branches.id', $branch->id);
+                    }])
+                    ->ordered()
+                    ->get()
+                    ->map(function ($item) {
+                        // Flatten this branch's pivot price onto the item
+                        // itself so the frontend doesn't need to know
+                        // about the branches relationship at all.
+                        $item->price = $item->branches->first()->pivot->price;
+                        unset($item->branches);
+
+                        return $item;
+                    })
+                    ->toArray();
+            }
+        );
 
         $items = collect($items);
 
@@ -61,11 +89,46 @@ class MenuItemController extends Controller
     }
 
     /**
-     * GET /api/menu-items/{menuItem}
+     * GET /api/menu-items/{menuItem}?branch=beirut
+     * Branch is optional here; if given, the branch's price is attached.
      */
-    public function show(MenuItem $menuItem)
+    public function show(Request $request, MenuItem $menuItem)
     {
-        return response()->json($menuItem->load(['category', 'tags']));
+        $menuItem->load(['category', 'tags']);
+
+        if ($request->filled('branch')) {
+            $branch = Branch::where('slug', $request->branch)->first();
+            $pivot = $branch
+                ? $menuItem->branches()->where('branches.id', $branch->id)->first()?->pivot
+                : null;
+
+            $menuItem->price = $pivot?->price;
+            $menuItem->is_available_here = (bool) ($pivot?->is_available ?? false);
+        }
+
+        return response()->json($menuItem);
+    }
+
+    /**
+     * PUT /api/admin/menu-items/{menuItem}/branches
+     * Body: { "branches": [{"branch_id": 1, "price": 10, "is_available": true}, ...] }
+     * Replaces this item's full set of branch assignments — a branch
+     * left out simply means the item isn't offered there.
+     */
+    public function syncBranches(SyncMenuItemBranchesRequest $request, MenuItem $menuItem)
+    {
+        $sync = collect($request->validated('branches'))->mapWithKeys(fn ($row) => [
+            $row['branch_id'] => [
+                'price' => $row['price'],
+                'is_available' => $row['is_available'] ?? true,
+            ],
+        ]);
+
+        $menuItem->branches()->sync($sync);
+
+        Branch::clearCaches();
+
+        return response()->json($menuItem->load('branches'));
     }
 
     /**
@@ -93,8 +156,6 @@ class MenuItemController extends Controller
         if ($tags !== null) {
             $menuItem->tags()->sync($tags);
         }
-
-        $this->clearCache();
 
         return response()->json($menuItem->load(['category', 'tags']), 201);
     }
@@ -131,8 +192,6 @@ class MenuItemController extends Controller
             $menuItem->tags()->sync($tags);
         }
 
-        $this->clearCache();
-
         return response()->json($menuItem->load(['category', 'tags']));
     }
 
@@ -147,8 +206,6 @@ class MenuItemController extends Controller
 
         $menuItem->delete();
 
-        $this->clearCache();
-
         return response()->json(['message' => 'Menu item deleted']);
     }
 
@@ -162,17 +219,9 @@ class MenuItemController extends Controller
             MenuItem::where('id', $item['id'])->update(['sort_order' => $item['sort_order']]);
         }
 
-        $this->clearCache();
+        Branch::clearCaches();
 
         return response()->json(['message' => 'Order updated']);
-    }
-
-    /**
-     * Wipe the cached public menu list. Called after any admin write.
-     */
-    private function clearCache(): void
-    {
-        Cache::forget(self::CACHE_KEY);
     }
 
     private function uniqueSlug(string $name, ?int $ignoreId = null): string

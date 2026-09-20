@@ -21,10 +21,10 @@ class StoreMenuItemRequest extends FormRequest
             'description' => ['required', 'array'], // doubles as ingredients text
             'description.en' => ['required', 'string'],
             'description.es' => ['required', 'string'],
-            'price' => ['required', 'numeric', 'min:0'],
             'image' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:5120'],
             'is_featured' => ['nullable', 'boolean'],
-            'is_available' => ['nullable', 'boolean'],
+            'calories' => ['nullable', 'integer', 'min:0'],
+            'protein_grams' => ['nullable', 'integer', 'min:0'],
             'sort_order' => ['nullable', 'integer'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],

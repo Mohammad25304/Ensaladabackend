@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\RecordCategoriesRequest;
 use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
+use App\Models\Branch;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,14 +18,43 @@ class CategoryController extends Controller
 
     /**
      * GET /api/categories
-     * Public: active categories in display order, with their menu items.
-     * Cached, since this changes only when an admin edits categories.
+     * GET /api/categories?branch=beirut
+     * Public: active categories in display order. Pass ?branch= to only
+     * get categories that actually have at least one available item at
+     * that branch — otherwise the frontend would render empty sections
+     * for categories a smaller branch doesn't carry at all.
+     * Cached, since this changes only when an admin edits categories,
+     * menu items, or branch assignments.
      */
     public function index(Request $request)
     {
         // Admin dashboard passes ?all=1 to see inactive categories too — skip cache for that view
         if ($request->boolean('all')) {
             return response()->json(Category::orderBy('sort_order')->get());
+        }
+
+        if ($request->filled('branch')) {
+            $branch = Branch::where('slug', $request->branch)->first();
+
+            if (! $branch) {
+                return response()->json(['message' => 'Branch not found'], 404);
+            }
+
+            $categories = Cache::remember(
+                "categories.public.{$branch->slug}",
+                now()->addHours(6),
+                function () use ($branch) {
+                    return Category::active()
+                        ->whereHas('menuItems.branches', function ($q) use ($branch) {
+                            $q->where('branches.id', $branch->id)
+                                ->where('branch_menu_item.is_available', true);
+                        })
+                        ->get()
+                        ->toArray();
+                }
+            );
+
+            return response()->json($categories);
         }
 
         $categories = Cache::remember(
@@ -116,6 +146,7 @@ class CategoryController extends Controller
     private function clearCache(): void
     {
         Cache::forget(self::CACHE_KEY);
+        Branch::clearCaches();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\Branch;
 use App\Models\SiteSetting;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -13,6 +14,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
+use Filament\Support\Icons\Heroicon;
 
 class ManageSiteSettings extends Page implements HasForms
 {
@@ -23,6 +25,14 @@ class ManageSiteSettings extends Page implements HasForms
     protected string $view = 'filament.pages.manage-site-settings';
 
     public ?array $data = [];
+
+    /**
+     * Which branch's settings are currently loaded in the form. Plain
+     * Livewire property (not part of the Filament schema) so switching it
+     * can trigger a full reload of $data without fighting the form's own
+     * state management.
+     */
+    public ?int $branchId = null;
 
     /**
      * Platform options the owner can choose from. The frontend maps these
@@ -45,9 +55,56 @@ class ManageSiteSettings extends Page implements HasForms
         ];
     }
 
+    public function branchOptions(): array
+    {
+        return Branch::query()
+            ->orderBy('sort_order')
+            ->get()
+            ->mapWithKeys(fn ($branch) => [$branch->id => $branch->name['en'] ?? '(untitled)'])
+            ->toArray();
+    }
+
+    /**
+     * Full branch records (not just id => label) for the pill switcher,
+     * so it can render each branch's real name.
+     */
+    public function branches()
+    {
+        return Branch::query()->orderBy('sort_order')->get();
+    }
+
+    public function selectBranch(int $branchId): void
+    {
+        $this->branchId = $branchId;
+        $this->loadSettingsForCurrentBranch();
+    }
+
     public function mount(): void
     {
-        $settings = SiteSetting::allAsArray();
+        // Default to the first branch so the page always has something
+        // loaded, rather than showing an empty form on first visit.
+        $this->branchId = Branch::orderBy('sort_order')->value('id');
+        $this->loadSettingsForCurrentBranch();
+    }
+
+    /**
+     * Called automatically by Livewire whenever $branchId changes via the
+     * branch <select> in the Blade view (wire:model.live="branchId").
+     */
+    public function updatedBranchId(): void
+    {
+        $this->loadSettingsForCurrentBranch();
+    }
+
+    protected function loadSettingsForCurrentBranch(): void
+    {
+        if (! $this->branchId) {
+            $this->form->fill([]);
+
+            return;
+        }
+
+        $settings = SiteSetting::allAsArray($this->branchId);
 
         // social_links is stored as a JSON string in the database (since every
         // other setting is a plain string) — decode it into an array of rows
@@ -62,6 +119,7 @@ class ManageSiteSettings extends Page implements HasForms
         return $schema
             ->components([
                 Section::make('Hero Section')
+                    ->icon(Heroicon::OutlinedSparkles)
                     ->schema([
                         TextInput::make('hero_badge')->label('Badge text'),
                         TextInput::make('hero_title')->label('Title'),
@@ -70,6 +128,7 @@ class ManageSiteSettings extends Page implements HasForms
                     ->columns(1),
 
                 Section::make('About Section')
+                    ->icon(Heroicon::OutlinedBookOpen)
                     ->schema([
                         TextInput::make('about_title')->label('Title'),
                         Textarea::make('about_body_1')->label('Paragraph 1')->rows(3),
@@ -78,6 +137,7 @@ class ManageSiteSettings extends Page implements HasForms
                     ->columns(1),
 
                 Section::make('Stats')
+                    ->icon(Heroicon::OutlinedChartBar)
                     ->schema([
                         TextInput::make('stat_1_value')->label('Stat 1 value'),
                         TextInput::make('stat_1_label')->label('Stat 1 label'),
@@ -89,6 +149,7 @@ class ManageSiteSettings extends Page implements HasForms
                     ->columns(2),
 
                 Section::make('Contact Info')
+                    ->icon(Heroicon::OutlinedMapPin)
                     ->schema([
                         TextInput::make('contact_address')->label('Address'),
                         TextInput::make('contact_phone')->label('Phone'),
@@ -99,6 +160,7 @@ class ManageSiteSettings extends Page implements HasForms
                     ->columns(2),
 
                 Section::make('Social Links')
+                    ->icon(Heroicon::OutlinedShare)
                     ->description('Add, remove, or reorder any platform — changes appear on the website immediately.')
                     ->schema([
                         Repeater::make('social_links')
@@ -128,6 +190,15 @@ class ManageSiteSettings extends Page implements HasForms
 
     public function save(): void
     {
+        if (! $this->branchId) {
+            Notification::make()
+                ->title('Choose a branch first')
+                ->danger()
+                ->send();
+
+            return;
+        }
+
         $data = $this->form->getState();
 
         // Encode social_links back to a JSON string before saving, since
@@ -135,7 +206,7 @@ class ManageSiteSettings extends Page implements HasForms
         $data['social_links'] = json_encode($data['social_links'] ?? []);
 
         foreach ($data as $key => $value) {
-            SiteSetting::set($key, $value);
+            SiteSetting::set($key, $value, $this->branchId);
         }
 
         Notification::make()

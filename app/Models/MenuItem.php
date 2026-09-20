@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Support\Facades\Cache;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Storage;
 
 class MenuItem extends Model
@@ -19,27 +19,27 @@ class MenuItem extends Model
         'name',
         'slug',
         'description',
-        'price',
         'image',
         'image_public_id',
         'is_featured',
-        'is_available',
+        'calories',
+        'protein_grams',
         'sort_order',
     ];
 
     protected $casts = [
         'name' => 'array',
         'description' => 'array',
-        'price' => 'decimal:2',
         'is_featured' => 'boolean',
-        'is_available' => 'boolean',
+        'calories' => 'integer',
+        'protein_grams' => 'integer',
         'sort_order' => 'integer',
     ];
 
     protected static function booted(): void
     {
-        static::saved(fn () => Cache::forget('menu_items.public'));
-        static::deleted(fn () => Cache::forget('menu_items.public'));
+        static::saved(fn () => Branch::clearCaches());
+        static::deleted(fn () => Branch::clearCaches());
     }
 
     public function category(): BelongsTo
@@ -52,9 +52,27 @@ class MenuItem extends Model
         return $this->belongsToMany(Tag::class, 'menu_item_tag');
     }
 
-    public function scopeAvailable($query)
+    /**
+     * Branches this item is offered at, each carrying its own price and
+     * availability via the pivot. An item with no rows here isn't sold
+     * anywhere; one branch's pivot having is_available=false means it's
+     * temporarily paused just at that branch.
+     */
+    public function branches(): BelongsToMany
     {
-        return $query->where('is_available', true);
+        return $this->belongsToMany(Branch::class, 'branch_menu_item')
+            ->withPivot(['price', 'is_available'])
+            ->withTimestamps();
+    }
+
+    /**
+     * Same underlying table as branches(), exposed as a HasMany so the
+     * admin form's Repeater can manage it directly — Filament's Repeater
+     * can't reliably write pivot data through a raw BelongsToMany.
+     */
+    public function branchMenuItems(): HasMany
+    {
+        return $this->hasMany(BranchMenuItem::class);
     }
 
     public function scopeFeatured($query)
