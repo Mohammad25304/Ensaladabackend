@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class MenuItem extends Model
@@ -73,6 +74,42 @@ class MenuItem extends Model
     public function branchMenuItems(): HasMany
     {
         return $this->hasMany(BranchMenuItem::class);
+    }
+
+    /**
+     * Items available at a branch, ordered, with that branch's price
+     * flattened onto each item. Shared by the public menu endpoint and the
+     * chatbot so both read the same cache entry.
+     */
+    public static function publicForBranch(Branch $branch): array
+    {
+        return Cache::remember(
+            "menu_items.public.{$branch->slug}",
+            now()->addHours(6),
+            function () use ($branch) {
+                return static::query()
+                    ->with(['category', 'tags'])
+                    ->whereHas('branches', function ($q) use ($branch) {
+                        $q->where('branches.id', $branch->id)
+                            ->where('branch_menu_item.is_available', true);
+                    })
+                    ->with(['branches' => function ($q) use ($branch) {
+                        $q->where('branches.id', $branch->id);
+                    }])
+                    ->ordered()
+                    ->get()
+                    ->map(function ($item) {
+                        // Flatten this branch's pivot price onto the item
+                        // itself so the frontend doesn't need to know
+                        // about the branches relationship at all.
+                        $item->price = $item->branches->first()->pivot->price;
+                        unset($item->branches);
+
+                        return $item;
+                    })
+                    ->toArray();
+            }
+        );
     }
 
     public function scopeFeatured($query)

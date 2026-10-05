@@ -43,6 +43,27 @@ class Category extends Model
         return $this->hasMany(MenuItem::class);
     }
 
+    /**
+     * Active categories that have at least one available item at the branch.
+     * Shared by the public categories endpoint and the chatbot.
+     */
+    public static function publicForBranch(Branch $branch): array
+    {
+        return Cache::remember(
+            "categories.public.{$branch->slug}",
+            now()->addHours(6),
+            function () use ($branch) {
+                return static::active()
+                    ->whereHas('menuItems.branches', function ($q) use ($branch) {
+                        $q->where('branches.id', $branch->id)
+                            ->where('branch_menu_item.is_available', true);
+                    })
+                    ->get()
+                    ->toArray();
+            }
+        );
+    }
+
     public function scopeActive($query)
     {
         return $query->where('is_active', true)->orderBy('sort_order');

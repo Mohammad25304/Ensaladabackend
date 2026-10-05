@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
-class Loginrequest extends FormRequest
+class LoginRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -24,7 +24,7 @@ class Loginrequest extends FormRequest
     {
         return [
             'email' => ['required', 'email'],
-            'password' => ['required'],        
+            'password' => ['required'],
         ];
     }
 }

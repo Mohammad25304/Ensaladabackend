@@ -3,6 +3,7 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BranchController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\ContactMessageController;
 use App\Http\Controllers\Api\MenuItemController;
 use App\Http\Controllers\Api\SiteSettingController;
@@ -21,11 +22,17 @@ Route::get('/menu-items/{menuItem}', [MenuItemController::class, 'show']);
 Route::get('/tags', [TagController::class, 'index']);
 Route::get('/site-settings', [SiteSettingController::class, 'index']);
 
+// Chatbot: rule-based (no external API), so cheap — still throttled per IP
+Route::get('/chat/welcome', [ChatController::class, 'welcome'])
+    ->middleware('throttle:30,1');
+Route::post('/chat', [ChatController::class, 'message'])
+    ->middleware('throttle:30,1');
+
 Route::post('/contact', [ContactMessageController::class, 'store'])
-     ->middleware('throttle:10,1'); // max 10 submissions per minute per IP
+    ->middleware('throttle:10,1'); // max 10 submissions per minute per IP
 
 Route::post('/login', [AuthController::class, 'login'])
-     ->middleware('throttle:5,1'); // max 5 attempts per minute per IP
+    ->middleware('throttle:5,1'); // max 5 attempts per minute per IP
 
 // ─────────────────────────────
 // Admin routes (protected)

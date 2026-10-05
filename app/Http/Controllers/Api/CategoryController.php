@@ -40,19 +40,7 @@ class CategoryController extends Controller
                 return response()->json(['message' => 'Branch not found'], 404);
             }
 
-            $categories = Cache::remember(
-                "categories.public.{$branch->slug}",
-                now()->addHours(6),
-                function () use ($branch) {
-                    return Category::active()
-                        ->whereHas('menuItems.branches', function ($q) use ($branch) {
-                            $q->where('branches.id', $branch->id)
-                                ->where('branch_menu_item.is_available', true);
-                        })
-                        ->get()
-                        ->toArray();
-                }
-            );
+            $categories = Category::publicForBranch($branch);
 
             return response()->json($categories);
         }

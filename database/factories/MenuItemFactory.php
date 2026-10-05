@@ -23,11 +23,9 @@ class MenuItemFactory extends Factory
                 'en' => fake()->sentence(12),
                 'es' => fake()->sentence(12),
             ],
-            'price' => fake()->randomFloat(2, 5, 25),
             'image' => 'https://placehold.co/400x300',
             'image_public_id' => null,
             'is_featured' => false,
-            'is_available' => true,
             'sort_order' => fake()->numberBetween(0, 10),
         ];
     }

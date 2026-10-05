@@ -4,7 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Factories\HasFactoryl;
+
 class ContactMessage extends Model
 {
     use HasFactory;
@@ -18,10 +18,11 @@ class ContactMessage extends Model
     ];
 
     protected $casts = [
-        'is_read' => 'boolean'
+        'is_read' => 'boolean',
     ];
 
-    public function scopeUnread($query){
+    public function scopeUnread($query)
+    {
         return $query->where('is_read', false);
     }
 }

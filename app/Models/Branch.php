@@ -58,6 +58,7 @@ class Branch extends Model
     public static function clearCaches(): void
     {
         Cache::forget('branches.public');
+        Cache::forget(Faq::CACHE_KEY);
 
         static::pluck('slug')->each(function (string $slug) {
             Cache::forget("menu_items.public.{$slug}");
