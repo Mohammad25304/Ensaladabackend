@@ -19,6 +19,10 @@ class ContactMessagesTable
                     ->label('Read')
                     ->boolean(),
 
+                TextColumn::make('branch')
+                    ->label('Branch')
+                    ->state(fn (ContactMessage $record) => $record->branch?->name['en'] ?? '—'),
+
                 TextColumn::make('name')
                     ->searchable(),
 

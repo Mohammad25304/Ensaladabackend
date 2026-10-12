@@ -37,7 +37,7 @@ Route::post('/login', [AuthController::class, 'login'])
 // ─────────────────────────────
 // Admin routes (protected)
 // ─────────────────────────────
-Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
+Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::get('/me', [AuthController::class, 'me']);
 
@@ -51,7 +51,7 @@ Route::middleware('auth:sanctum')->prefix('admin')->group(function () {
     Route::post('/menu-items/reorder', [MenuItemController::class, 'reorder']);
     Route::put('/menu-items/{menuItem}/branches', [MenuItemController::class, 'syncBranches']);
 
-    Route::apiResource('tags', TagController::class)->except(['index']);
+    Route::apiResource('tags', TagController::class)->except(['index', 'show']);
     Route::put('/branches/{branch}/site-settings', [SiteSettingController::class, 'update']);
 
     Route::get('/contact-messages', [ContactMessageController::class, 'index']);

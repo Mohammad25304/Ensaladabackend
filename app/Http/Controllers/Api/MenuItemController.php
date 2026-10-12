@@ -32,7 +32,7 @@ class MenuItemController extends Controller
     {
         $request->validate(['branch' => ['required', 'string']]);
 
-        $branch = Branch::where('slug', $request->branch)->first();
+        $branch = Branch::where('slug', $request->branch)->where('is_active', true)->first();
 
         if (! $branch) {
             return response()->json(['message' => 'Branch not found'], 404);
@@ -115,9 +115,9 @@ class MenuItemController extends Controller
 
         if ($request->hasFile('image')) {
             $path = $request->file('image')->store('menu-items', 'public');
-            // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/'.$path);
-
+            // Store only the relative path; the model's image accessor builds
+            // the full URL, so a domain change never breaks saved images.
+            $data['image'] = $path;
             $data['image_public_id'] = $path;
         }
 
@@ -129,6 +129,9 @@ class MenuItemController extends Controller
 
         if ($tags !== null) {
             $menuItem->tags()->sync($tags);
+            // The saved() hook already cleared the caches, but tags are synced
+            // after it — clear again so the public list can't cache old tags.
+            Branch::clearCaches();
         }
 
         return response()->json($menuItem->load(['category', 'tags']), 201);
@@ -147,9 +150,9 @@ class MenuItemController extends Controller
             }
 
             $path = $request->file('image')->store('menu-items', 'public');
-            // $data['image'] = Storage::disk('public')->url($path);
-            $data['image'] = asset('storage/'.$path);
-
+            // Store only the relative path; the model's image accessor builds
+            // the full URL, so a domain change never breaks saved images.
+            $data['image'] = $path;
             $data['image_public_id'] = $path;
         }
 
@@ -164,6 +167,9 @@ class MenuItemController extends Controller
 
         if ($tags !== null) {
             $menuItem->tags()->sync($tags);
+            // The saved() hook already cleared the caches, but tags are synced
+            // after it — clear again so the public list can't cache old tags.
+            Branch::clearCaches();
         }
 
         return response()->json($menuItem->load(['category', 'tags']));

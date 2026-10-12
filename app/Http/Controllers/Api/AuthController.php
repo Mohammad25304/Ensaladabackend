@@ -23,7 +23,9 @@ class AuthController extends Controller
 
         $user = User::where('email', $credentials['email'])->first();
 
-        if (! $user || ! Hash::check($credentials['password'], $user->password)) {
+        // Same generic error for wrong password and for non-admin accounts, so
+        // the response doesn't reveal which accounts exist.
+        if (! $user || ! Hash::check($credentials['password'], $user->password) || ! $user->isAdmin()) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],
             ]);

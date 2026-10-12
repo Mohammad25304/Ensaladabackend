@@ -29,12 +29,12 @@ class CategoryController extends Controller
     public function index(Request $request)
     {
         // Admin dashboard passes ?all=1 to see inactive categories too — skip cache for that view
-        if ($request->boolean('all')) {
+        if ($request->boolean('all') && $request->user('sanctum')?->isAdmin()) {
             return response()->json(Category::orderBy('sort_order')->get());
         }
 
         if ($request->filled('branch')) {
-            $branch = Branch::where('slug', $request->branch)->first();
+            $branch = Branch::where('slug', $request->branch)->where('is_active', true)->first();
 
             if (! $branch) {
                 return response()->json(['message' => 'Branch not found'], 404);

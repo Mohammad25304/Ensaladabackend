@@ -20,7 +20,7 @@ class SiteSettingController extends Controller
     {
         $request->validate(['branch' => ['required', 'string']]);
 
-        $branch = Branch::where('slug', $request->branch)->first();
+        $branch = Branch::where('slug', $request->branch)->where('is_active', true)->first();
 
         if (! $branch) {
             return response()->json(['message' => 'Branch not found'], 404);

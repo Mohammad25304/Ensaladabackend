@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreContactMessageRequest;
+use App\Models\Branch;
 use App\Models\ContactMessage;
 
 class ContactMessageController extends Controller
@@ -15,7 +16,20 @@ class ContactMessageController extends Controller
      */
     public function store(StoreContactMessageRequest $request)
     {
-        $contactMessage = ContactMessage::create($request->validated());
+        $data = $request->validated();
+
+        $branchSlug = $data['branch'] ?? null;
+        unset($data['branch']);
+
+        $data['branch_id'] = $branchSlug
+            ? Branch::where('slug', $branchSlug)->value('id')
+            : null;
+
+        // Set explicitly: the original migration's DB default was the *string*
+        // 'false', which reads back as truthy and made new messages look read.
+        $data['is_read'] = false;
+
+        $contactMessage = ContactMessage::create($data);
 
         // Optional: notify the admin by email here, e.g.
         // Mail::to(config('mail.admin_address'))->send(new NewContactMessage($contactMessage));
@@ -29,7 +43,7 @@ class ContactMessageController extends Controller
      */
     public function index()
     {
-        $messages = ContactMessage::orderBy('is_read')->orderByDesc('created_at')->get();
+        $messages = ContactMessage::with('branch')->orderBy('is_read')->orderByDesc('created_at')->get();
 
         return response()->json($messages);
     }

@@ -14,6 +14,16 @@ class Tag extends Model
         'name',
     ];
 
+    /**
+     * Tags are embedded in the cached public menu lists, so renaming or
+     * deleting one must clear those caches or the site shows stale tags.
+     */
+    protected static function booted(): void
+    {
+        static::saved(fn () => Branch::clearCaches());
+        static::deleted(fn () => Branch::clearCaches());
+    }
+
     public function menuItems(): BelongsToMany
     {
         return $this->belongsToMany(MenuItem::class, 'menu_item_tag');

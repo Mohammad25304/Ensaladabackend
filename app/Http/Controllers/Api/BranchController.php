@@ -22,7 +22,7 @@ class BranchController extends Controller
     public function index(Request $request)
     {
         // Admin dashboard passes ?all=1 to also see inactive branches
-        if ($request->boolean('all')) {
+        if ($request->boolean('all') && $request->user('sanctum')?->isAdmin()) {
             return response()->json(Branch::orderBy('sort_order')->get());
         }
 
@@ -38,8 +38,12 @@ class BranchController extends Controller
     /**
      * GET /api/branches/{branch}
      */
-    public function show(Branch $branch)
+    public function show(Request $request, Branch $branch)
     {
+        if (! $branch->is_active && ! $request->user('sanctum')?->isAdmin()) {
+            abort(404);
+        }
+
         return response()->json($branch);
     }
 

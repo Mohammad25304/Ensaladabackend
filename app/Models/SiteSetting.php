@@ -17,6 +17,25 @@ class SiteSetting extends Model
         'value',
     ];
 
+    /**
+     * The public API (/api/site-settings) caches each branch's settings for
+     * hours. Clear that cache whenever any setting row changes, no matter
+     * where the change came from (Filament panel, API, tinker, seeders).
+     */
+    protected static function booted(): void
+    {
+        $forgetPublicCache = function (SiteSetting $setting) {
+            $slug = Branch::whereKey($setting->branch_id)->value('slug');
+
+            if ($slug) {
+                Cache::forget("site_settings.public.{$slug}");
+            }
+        };
+
+        static::saved($forgetPublicCache);
+        static::deleted($forgetPublicCache);
+    }
+
     public function branch(): BelongsTo
     {
         return $this->belongsTo(Branch::class);

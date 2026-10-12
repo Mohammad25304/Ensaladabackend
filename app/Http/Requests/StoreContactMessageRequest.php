@@ -14,6 +14,8 @@ class StoreContactMessageRequest extends FormRequest
     public function rules(): array
     {
         return [
+            // slug of the branch the visitor was browsing (optional)
+            'branch' => ['nullable', 'string', 'exists:branches,slug'],
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'email', 'max:255'],
             'phone' => ['nullable', 'string', 'max:50'],
