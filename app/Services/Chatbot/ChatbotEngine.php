@@ -706,12 +706,17 @@ final class ChatbotEngine
         $desc = trim($this->loc($item['description'] ?? null));
         $price = $this->money($item['price'] ?? 0);
 
-        $nutrition = implode(' and ', array_filter([
-            ($item['calories'] ?? null) !== null ? "{$item['calories']} calories" : null,
+        $bits = array_values(array_filter([
+            ($item['calories'] ?? null) !== null ? "{$item['calories']} kcal" : null,
             ($item['protein_grams'] ?? null) !== null ? "{$item['protein_grams']}g of protein" : null,
+            ($item['fats_grams'] ?? null) !== null ? "{$item['fats_grams']}g of fat" : null,
+            ($item['carbs_grams'] ?? null) !== null ? "{$item['carbs_grams']}g of carbs" : null,
         ]));
+        $nutrition = count($bits) > 1
+            ? implode(', ', array_slice($bits, 0, -1)).' and '.end($bits)
+            : ($bits[0] ?? '');
 
-        $asksNutrition = (bool) preg_match('~\bcal|\bkcal|nutrition|macro|protein~', $t);
+        $asksNutrition = (bool) preg_match('~\bcal|\bkcal|nutrition|macro|protein|\bfats?\b|\bcarbs?\b|carbohydrate~', $t);
         $asksPrice = (bool) preg_match('~\bprice|\bcost|how much|\bdollar|\$~', $t);
 
         $parts = [];
@@ -848,6 +853,8 @@ final class ChatbotEngine
             'image' => $it['image'] ?? null,
             'calories' => $it['calories'] ?? null,
             'protein_grams' => $it['protein_grams'] ?? null,
+            'fats_grams' => $it['fats_grams'] ?? null,
+            'carbs_grams' => $it['carbs_grams'] ?? null,
             'is_featured' => (bool) ($it['is_featured'] ?? false),
             'tags' => array_map(fn ($tg) => ['id' => $tg['id'], 'name' => $tg['name']], $it['tags'] ?? []),
         ], array_slice($items, 0, self::MAX_CARDS));

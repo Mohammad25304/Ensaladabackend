@@ -25,6 +25,8 @@ class StoreMenuItemRequest extends FormRequest
             'is_featured' => ['nullable', 'boolean'],
             'calories' => ['nullable', 'integer', 'min:0'],
             'protein_grams' => ['nullable', 'integer', 'min:0'],
+            'fats_grams' => ['nullable', 'integer', 'min:0'],
+            'carbs_grams' => ['nullable', 'integer', 'min:0'],
             'sort_order' => ['nullable', 'integer'],
             'tags' => ['nullable', 'array'],
             'tags.*' => ['exists:tags,id'],

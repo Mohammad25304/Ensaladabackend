@@ -26,7 +26,6 @@ class CategoryForm
 
             TextInput::make('name.es')
                 ->label('Name (Spanish)')
-                ->required()
                 ->maxLength(255),
 
             TextInput::make('slug')

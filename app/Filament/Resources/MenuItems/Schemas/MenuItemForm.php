@@ -31,7 +31,7 @@ class MenuItemForm
 
             TextInput::make('name.es')
                 ->label('Name (Spanish)')
-                ->required()
+
                 ->maxLength(255),
 
             TextInput::make('slug')
@@ -79,7 +79,6 @@ class MenuItemForm
 
             Textarea::make('description.es')
                 ->label('Description / Ingredients (Spanish)')
-                ->required()
                 ->rows(4),
 
             FileUpload::make('image')
@@ -104,6 +103,17 @@ class MenuItemForm
 
             TextInput::make('protein_grams')
                 ->label('Protein')
+                ->numeric()
+                ->minValue(0)
+                ->suffix('g'),
+            TextInput::make('fats_grams')
+                ->label('Fats')
+                ->numeric()
+                ->minValue(0)
+                ->suffix('g'),
+
+            TextInput::make('carbs_grams')
+                ->label('Carbs')
                 ->numeric()
                 ->minValue(0)
                 ->suffix('g'),
