@@ -25,7 +25,6 @@ class MenuItem extends Model
         'is_featured',
         'calories',
         'protein_grams',
-        'fats_grams',
         'carbs_grams',
         'sort_order',
     ];
@@ -36,7 +35,6 @@ class MenuItem extends Model
         'is_featured' => 'boolean',
         'calories' => 'integer',
         'protein_grams' => 'integer',
-        'fats_grams' => 'integer',
         'carbs_grams' => 'integer',
         'sort_order' => 'integer',
     ];

@@ -709,7 +709,6 @@ final class ChatbotEngine
         $bits = array_values(array_filter([
             ($item['calories'] ?? null) !== null ? "{$item['calories']} kcal" : null,
             ($item['protein_grams'] ?? null) !== null ? "{$item['protein_grams']}g of protein" : null,
-            ($item['fats_grams'] ?? null) !== null ? "{$item['fats_grams']}g of fat" : null,
             ($item['carbs_grams'] ?? null) !== null ? "{$item['carbs_grams']}g of carbs" : null,
         ]));
         $nutrition = count($bits) > 1
@@ -853,7 +852,6 @@ final class ChatbotEngine
             'image' => $it['image'] ?? null,
             'calories' => $it['calories'] ?? null,
             'protein_grams' => $it['protein_grams'] ?? null,
-            'fats_grams' => $it['fats_grams'] ?? null,
             'carbs_grams' => $it['carbs_grams'] ?? null,
             'is_featured' => (bool) ($it['is_featured'] ?? false),
             'tags' => array_map(fn ($tg) => ['id' => $tg['id'], 'name' => $tg['name']], $it['tags'] ?? []),

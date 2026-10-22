@@ -106,11 +106,6 @@ class MenuItemForm
                 ->numeric()
                 ->minValue(0)
                 ->suffix('g'),
-            TextInput::make('fats_grams')
-                ->label('Fats')
-                ->numeric()
-                ->minValue(0)
-                ->suffix('g'),
 
             TextInput::make('carbs_grams')
                 ->label('Carbs')
