@@ -40,6 +40,13 @@ class BranchForm
                 ->rows(2)
                 ->columnSpanFull(),
 
+            TextInput::make('map_url')
+                ->label('Google Maps link')
+                ->url()
+                ->maxLength(2000)
+                ->helperText('Open the branch in Google Maps → Share → Copy link, then paste it here.')
+                ->columnSpanFull(),
+
             TextInput::make('phone')
                 ->tel()
                 ->maxLength(50),
