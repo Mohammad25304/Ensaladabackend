@@ -18,8 +18,21 @@ class EditMenuItem extends EditRecord
             DeleteAction::make(),
         ];
     }
-       protected function getRedirectUrl(): string
+
+    protected function getRedirectUrl(): string
     {
         return $this->getResource()::getUrl('index');
+    }
+
+    protected function mutateFormDataBeforeFill(array $data): array
+    {
+        $raw = $this->record->getRawOriginal('image');
+
+        // Only hand Filament a real storage path. Images stored as full URLs
+        // (e.g. set through the API) aren't on the public disk, so leave the
+        // field empty for those.
+        $data['image'] = ($raw && ! str_starts_with($raw, 'http')) ? $raw : null;
+
+        return $data;
     }
 }
