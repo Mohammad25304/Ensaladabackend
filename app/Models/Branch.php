@@ -18,12 +18,14 @@ class Branch extends Model
         'phone',
         'is_active',
         'sort_order',
+        'map_url',
     ];
 
     protected $casts = [
         'name' => 'array', // {"en": "Beirut", "es": "Beirut"}
         'is_active' => 'boolean',
         'sort_order' => 'integer',
+        'map_url' => 'string',
     ];
 
     protected static function booted(): void
